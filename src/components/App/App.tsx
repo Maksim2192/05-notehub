@@ -1,83 +1,61 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { UseQueryOptions } from '@tanstack/react-query';
-import ReactPaginate from "react-paginate";
-import { useDebouncedCallback } from "use-debounce";
-
-import css from "./App.module.css";
-import { NoteList } from "../NoteList/NoteList";
-import NoteForm from "../NoteForm/NoteForm";
-import Modal from "../Modal/Modal";
-import SearchBox from "../SearchBox/SearchBox";
-import { fetchNotes, deleteNote } from "../../services/noteService";
+import { useQuery } from "@tanstack/react-query";
+import { fetchNotes } from "../../services/noteService";
 import type { Note } from "../../types/note";
+import NoteList from "../NoteList/NoteList";
+import NoteForm from "../NoteForm/NoteForm";
+import Pagination from "../Pagination/Pagination";
+import Modal from "../Modal/Modal";
 
-export default function App() {
+const App = () => {
+  const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setModalOpen] = useState(false);
 
-  const queryClient = useQueryClient();
-
-  const queryOptions: UseQueryOptions<{ hits: Note[]; nbPages: number }, Error> = {
-    queryKey: ["notes", search, currentPage],
-    queryFn: () => fetchNotes(search, currentPage),
-    enabled: search !== "",
-    // keepPreviousData: true,
-  };
-
-  const { data, isLoading, isError, isSuccess } = useQuery(queryOptions);
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteNote,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notes"] }),
-  });
-
-  const totalPages = data?.nbPages ?? 0;
-
-  const debouncedSearch = useDebouncedCallback((value: string) => {
-    setSearch(value);
-    setCurrentPage(1);
-  }, 500);
+  const { data, isLoading, isError } = useQuery(
+    ["notes", search, page],
+    () => fetchNotes(search, page),
+    {
+      keepPreviousData: true,
+      placeholderData: { notes: [], totalPages: 1 },
+    }
+  );
 
   return (
-    <div className={css.app}>
-      <header className={css.toolbar}>
-        <SearchBox value={search} onChange={debouncedSearch} />
-        <button className={css.button} onClick={() => setIsModalOpen(true)}>
-          Create note +
-        </button>
+    <div>
+      <header>
+        <h1>NoteHub</h1>
+        <button onClick={() => setModalOpen(true)}>Create Note</button>
       </header>
 
-      {isSuccess && totalPages > 1 && (
-        <ReactPaginate
-          pageCount={totalPages}
-          pageRangeDisplayed={5}
-          marginPagesDisplayed={1}
-          onPageChange={({ selected }) => setCurrentPage(selected + 1)}
-          forcePage={currentPage - 1}
-          containerClassName={css.pagination}
-          activeClassName={css.active}
-          nextLabel="→"
-          previousLabel="←"
-        />
-      )}
+      <input
+        type="text"
+        placeholder="Search notes..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
 
       {isLoading && <p>Loading...</p>}
-      {isError && <p>Error fetching notes!</p>}
+      {isError && <p>Error loading notes</p>}
 
-      {data && data.hits.length > 0 && (
-        <NoteList
-          notes={data.hits}
-          onDelete={(id: number) => deleteMutation.mutate(id)}
-        />
+      {data && (
+        <>
+          <NoteList notes={data.notes} />
+          <Pagination
+            currentPage={page}
+            totalPages={data.totalPages}
+            onPageChange={setPage}
+          />
+        </>
       )}
 
       {isModalOpen && (
-        <Modal onClose={() => setIsModalOpen(false)}>
-          <NoteForm onClose={() => setIsModalOpen(false)} />
+        <Modal onClose={() => setModalOpen(false)}>
+          <NoteForm onClose={() => setModalOpen(false)} />
         </Modal>
       )}
     </div>
   );
-}
+};
+
+export default App;
