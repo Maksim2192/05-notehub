@@ -30,12 +30,13 @@ export const NoteList = ({ notes }: NoteListProps) => {
             <span className={css.tag}>{note.tag}</span>
 
             <button
-              className={css.button}
-              onClick={() => mutation.mutate(note.id)}
-              disabled={mutation.isLoading}
-            >
-              {mutation.isLoading ? "Deleting..." : "Delete"}
-            </button>
+  className={css.button}
+  onClick={() => mutation.mutate(note.id)}
+  disabled={mutation.isPending}
+>
+  {mutation.isPending ? "Deleting..." : "Delete"}
+</button>
+
           </div>
         </li>
       ))}

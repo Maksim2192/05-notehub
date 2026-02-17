@@ -75,13 +75,15 @@ const NoteForm = ({ onClose }: NoteFormProps) => {
               Cancel
             </button>
 
+            
             <button
-              type="submit"
-              className={css.submitButton}
-              disabled={!(isValid && dirty) || mutation.isLoading}
-            >
-              {mutation.isLoading ? "Creating..." : "Create note"}
-            </button>
+  type="submit"
+  className={css.submitButton}
+  disabled={!(isValid && dirty) || mutation.isPending}
+>
+  {mutation.isPending ? "Creating..." : "Create note"}
+</button>
+
           </div>
         </Form>
       )}
