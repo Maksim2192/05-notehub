@@ -35,7 +35,6 @@ const App = () => {
   return (
     <div>
       <header>
-        <h1>NoteHub</h1>
         <button onClick={() => setModalOpen(true)}>Create Note</button>
       </header>
 
@@ -46,7 +45,6 @@ const App = () => {
 
       {data && (
         <>
-          <NoteList notes={data.notes} />
 
           {data.totalPages > 1 && (
             <Pagination
@@ -55,6 +53,8 @@ const App = () => {
               onPageChange={setPage}
             />
           )}
+
+          <NoteList notes={data.notes} />
         </>
       )}
 
